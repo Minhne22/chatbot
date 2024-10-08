@@ -3,31 +3,25 @@ import time
 
 app = Flask(__name__)
 
-data_base_phake = {}
+my_verify_token = 'Minhdz'
 
 @app.route('/')
 def home():
     return 'Home'
 
-@app.route('/checkkey')
-def checkkey():
-    key = request.args.get('key')
-    data =  {'success': key in data_base_phake and round(time.time()) < data_base_phake[key]}
-    if data['success']:
-        data['remain_time'] = data_base_phake[key]
-    return data
+@app.route('/message-receive')
+def mr():
+    args = request.args
+    mode = args.get('hub.mode')
+    token = args.get('hub.verify_token')
+    challenge = args.get('hub.challenge')
+    if mode and token:
+        if mode == 'subscribe' and token == my_verify_token:
+            print('Webhook message')
+            return challenge, 200
 
-@app.route('/addkey')
-def addkey():
-    key = request.args.get('key')
-    data_base_phake[key] = round(time.time()) + 30 * 24 * 60 * 60
-    return 'Đã thêm key'
-
-@app.route('/deletekey')
-def delete_key():
-    key = request.args.get('key')
-    del data_base_phake[key]
-    return 'OK'
+    else:
+        return 'Not found', 404
 
 
 
